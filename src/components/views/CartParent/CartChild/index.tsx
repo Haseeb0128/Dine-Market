@@ -3,6 +3,13 @@ import { oneProductType } from "@/components/utils/ProductsDataArrayAndType";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { BsTrash3 } from "react-icons/bs";
+import imageUrlBuilder from "@sanity/image-url";
+import { client } from "../../../../../sanity/lib/client";
+
+const builder = imageUrlBuilder(client);
+function urlFor(source: any) {
+  return builder.image(source);
+}
 
 const CartComp = ({
   allProductsOfStore,
@@ -31,45 +38,46 @@ const CartComp = ({
       </h2>
       <div className="mt-10 grid lg:grid-cols-4 gap-4">
         <div className="col-span-3 p-1">
-          {allProductsForCart.map((item: oneProductType, index: number) => {
-            return (
-              <div
-                key={index}
-                className="grid lg:grid-cols-4 sm:grid-cols-4 p-1 mb-10"
-              >
-                <div className="sm:col-span-1 p-1">
-                  <Image
-                    className="mx-auto rounded-lg"
-                    src={"/raglan sweatshirt.png"}
-                    width={240}
-                    height={240}
-                    alt="image"
-                  />
-                </div>
-                <div className="lg:col-span-3 sm:col-span-3 p-1 flex justify-between">
-                  <div className="flex flex-col justify-between lg:px-6">
-                    <p className="text-2xl">{item.productname}</p>
-                    <p className="font-semibold">{item.productTypes[0]}</p>
-                    <p className="font-bold">Delivery Estimation</p>
-                    <p>5 working days</p>
-                    <p className="text-xl font-semibold">${item.price}</p>
+          {allProductsForCart &&
+            allProductsForCart.map((item: oneProductType, index: number) => {
+              return (
+                <div
+                  key={index}
+                  className="grid lg:grid-cols-4 sm:grid-cols-4 p-1 mb-10"
+                >
+                  <div className="sm:col-span-1 p-1">
+                    <Image
+                      className="mx-auto rounded-lg"
+                      src={urlFor(item.image[0]).url()}
+                      width={240}
+                      height={240}
+                      alt={item.image[0].alt}
+                    />
                   </div>
-                  <div className="flex flex-col justify-between items-center">
-                    <div>
-                      <button>
-                        <BsTrash3 size={25} />
-                      </button>
+                  <div className="lg:col-span-3 sm:col-span-3 p-1 flex justify-between">
+                    <div className="flex flex-col justify-between lg:px-6">
+                      <p className="text-2xl">{item.productname}</p>
+                      <p className="font-semibold">{item.productTypes[0]}</p>
+                      <p className="font-bold">Delivery Estimation</p>
+                      <p>5 working days</p>
+                      <p className="text-xl font-semibold">${item.price}</p>
                     </div>
-                    <div className="flex gap-3 items-center">
-                      <button className="text-3xl">+</button>
-                      <p>1</p>
-                      <button className="text-3xl">-</button>
+                    <div className="flex flex-col justify-between items-center">
+                      <div>
+                        <button>
+                          <BsTrash3 size={25} />
+                        </button>
+                      </div>
+                      <div className="flex gap-3 items-center">
+                        <button className="text-3xl">+</button>
+                        <p>1</p>
+                        <button className="text-3xl">-</button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
           <div className="grid lg:grid-cols-4 sm:grid-cols-4 p-1 mb-10">
             <div className="sm:col-span-1 p-1">
               <Image
