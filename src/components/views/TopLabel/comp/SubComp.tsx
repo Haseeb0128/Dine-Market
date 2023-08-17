@@ -15,7 +15,7 @@ const SubComp = () => {
     updateUsernamePhoto,
     loading,
   } = useContext(cartContext);
-  let name = userData.displayName;
+  let name = userData?.displayName;
 
   function handleEditName() {
     updateUsernamePhoto(nameOf);
