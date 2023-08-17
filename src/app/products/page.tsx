@@ -4,7 +4,11 @@ import { Card } from "@/components/views/Card";
 import Link from "next/link";
 
 async function fetchAllProductData() {
-  let res = await fetch(`${BASE_PATH_FOR_API}/api/products?start=0&end=16`);
+  let res = await fetch(`${BASE_PATH_FOR_API}/api/products?start=0&end=16`, {
+    next: {
+      revalidate: 120,
+    },
+  });
   if (!res.ok) {
     throw new Error("Failed to fetch data");
   }
