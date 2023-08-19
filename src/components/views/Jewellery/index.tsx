@@ -68,7 +68,7 @@ export const Jewellery = () => {
                   The Natural color is the actual natural color of the fiber,
                   undyed and 100% traceable.
                 </p>
-                <Link href={"/allproducts"}>
+                <Link href={"/products"}>
                   <button className="bg-[#0F172A] rounded-lg text-white p-3">
                     See all products
                   </button>

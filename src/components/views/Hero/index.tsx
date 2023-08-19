@@ -17,7 +17,7 @@ export const Hero = () => {
                 Anyone can beat you but no one can beat your outfit as long as
                 you wear Dine outfits.
               </p>
-              <Link href={"/allproducts"}>
+              <Link href={"/products"}>
                 <button className="w-[200px] h-[50px] bg-[#0F172A] text-white rounded-lg flex items-center justify-center gap-2">
                   <BsCart2 size={24} />
                   Start Shopping
