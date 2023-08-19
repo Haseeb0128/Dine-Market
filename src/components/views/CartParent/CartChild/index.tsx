@@ -1,10 +1,13 @@
 "use client";
 import { oneProductType } from "@/components/utils/ProductsDataArrayAndType";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { BsTrash3 } from "react-icons/bs";
 import imageUrlBuilder from "@sanity/image-url";
 import { client } from "../../../../../sanity/lib/client";
+import { cartContext } from "@/global/context";
+import { useRouter } from "next/navigation";
+import toast, { Toaster } from "react-hot-toast";
 
 const builder = imageUrlBuilder(client);
 function urlFor(source: any) {
@@ -17,22 +20,87 @@ const CartComp = ({
   allProductsOfStore: Array<oneProductType>;
 }) => {
   const [allProductsForCart, setAllProductsForCart] = useState<any>([]);
+  let { cartArray, dispatch, userData, loading } = useContext(cartContext);
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  let router = useRouter();
+
+  function PriceSubTotal() {
+    let originalToSend: number = 0;
+    for (let index = 0; index < cartArray.length; index++) {
+      const element = cartArray[index];
+      let subTotalPrice = element.quantity * element.price;
+      originalToSend = originalToSend + subTotalPrice;
+      if (subTotalPrice) {
+        setTotalPrice(originalToSend);
+        router.refresh();
+      }
+    }
+  }
+
   useEffect(() => {
-    let stateStorage: any = localStorage.getItem("cart") as string;
-    stateStorage = JSON.parse(stateStorage);
-    if (stateStorage) {
+    PriceSubTotal();
+  }, [allProductsForCart]);
+
+  function handleRemove(product_id: string) {
+    if (userData) {
+      let user_id = userData.uuid;
+      dispatch("removeFromCart", { product_id, user_id });
+    }
+  }
+
+  useEffect(() => {
+    if (cartArray.length !== 0) {
       let data = allProductsOfStore.filter((item: oneProductType) => {
-        for (let index = 0; index < stateStorage.length; index++) {
-          if (stateStorage[index].productID === item._id) {
+        for (let index = 0; index < cartArray.length; index++) {
+          if (cartArray[index].product_id === item._id) {
             return true;
           }
         }
       });
       setAllProductsForCart(data);
     }
-  }, []);
+  }, [cartArray]);
+
+  async function handleIncrementByOne(product_id: string, price: any) {
+    let stableQuantity: number = 0;
+    cartArray.forEach((element: any) => {
+      if (element.product_id == product_id) {
+        stableQuantity = element.quantity;
+      }
+    });
+    await dispatch("updateCart", {
+      product_id: product_id,
+      quantity: stableQuantity + 1,
+      user_id: userData.uuid,
+      price: price,
+    });
+  }
+
+  async function handleDecrementByOne(product_id: string, price: any) {
+    let stableQuantity: number = 0;
+    cartArray.forEach((element: any) => {
+      if (element.product_id == product_id) {
+        stableQuantity = element.quantity;
+      }
+    });
+    if (stableQuantity - 1 <= 0) {
+      notificationError("Cannot accept lower than 1");
+    } else {
+      await dispatch("updateCart", {
+        product_id: product_id,
+        quantity: stableQuantity - 1,
+        user_id: userData.uuid,
+        price: price,
+      });
+    }
+  }
+
+  const notificationError = (title: string) => toast(`${title}`);
+
   return (
     <div className="mt-12 mb-12 px-4 py-2 min-h-screen">
+      <Toaster />
       <h2 className="scroll-m-20 text-3xl font-bold tracking-tight transition-colors first:mt-0">
         Shopping Cart
       </h2>
@@ -64,21 +132,55 @@ const CartComp = ({
                     </div>
                     <div className="flex flex-col justify-between items-center">
                       <div>
-                        <button>
+                        <button
+                          onClick={() => {
+                            handleRemove(item._id);
+                          }}
+                        >
                           <BsTrash3 size={25} />
                         </button>
                       </div>
-                      <div className="flex gap-3 items-center">
-                        <button className="text-3xl">+</button>
-                        <p>1</p>
-                        <button className="text-3xl">-</button>
+                      <div
+                        className={`flex gap-3 ${
+                          loading ? "opacity-25" : "opacity-100"
+                        } items-center`}
+                      >
+                        <button
+                          disabled={loading}
+                          className="text-3xl"
+                          onClick={() => {
+                            handleIncrementByOne(item._id, item.price);
+                          }}
+                        >
+                          +
+                        </button>
+                        <p>
+                          {cartArray.map((subItem: any) => {
+                            let matching = subItem.product_id === item._id;
+                            let quantity = subItem.quantity;
+
+                            if (matching) {
+                              return quantity;
+                            } else {
+                              return "";
+                            }
+                          })}
+                        </p>
+                        <button
+                          className="text-3xl"
+                          onClick={() => {
+                            handleDecrementByOne(item._id, item.price);
+                          }}
+                        >
+                          -
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
               );
             })}
-          <div className="grid lg:grid-cols-4 sm:grid-cols-4 p-1 mb-10">
+          {/* <div className="grid lg:grid-cols-4 sm:grid-cols-4 p-1 mb-10">
             <div className="sm:col-span-1 p-1">
               <Image
                 className="mx-auto rounded-lg"
@@ -109,7 +211,7 @@ const CartComp = ({
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
           {/* <div className="grid lg:grid-cols-4 sm:grid-cols-4 p-1 mb-10">
             <div className="sm:col-span-1 p-1">
               <Image
@@ -148,11 +250,11 @@ const CartComp = ({
             <h2 className="font-bold text-xl">Order Summary</h2>
             <div className="flex justify-between">
               <p>Quantity</p>
-              <p>1 product</p>
+              <p>{cartArray.length} product</p>
             </div>
             <div className="flex justify-between">
               <p>Subtotal</p>
-              <p>$100</p>
+              <p>${totalPrice}</p>
             </div>
             <button className="rounded-lg bg-[#0F172A] text-white p-2">
               Procede to Checkout

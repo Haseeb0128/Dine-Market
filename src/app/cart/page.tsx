@@ -1,4 +1,5 @@
 import CartComp from "@/components/views/CartParent/CartChild";
+import ContextWrapper from "@/global/context";
 
 async function fetchAllProductsData() {
   let res = await fetch(
@@ -14,7 +15,11 @@ async function fetchAllProductsData() {
 
 const Cart = async () => {
   let allProductsOfStore = await fetchAllProductsData();
-  return <CartComp allProductsOfStore={allProductsOfStore.result} />;
+  return (
+    <ContextWrapper>
+      <CartComp allProductsOfStore={allProductsOfStore.result} />
+    </ContextWrapper>
+  );
 };
 
 export default Cart;

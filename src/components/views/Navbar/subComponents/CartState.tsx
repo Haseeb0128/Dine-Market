@@ -1,19 +1,19 @@
 "use client";
+import { cartContext } from "@/global/context";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { BsCart2 } from "react-icons/bs";
 
 const CartState = () => {
+  let { cartArray } = useContext(cartContext);
   const [quantity, setQuantity] = useState(0);
-  const isBrowser = () => typeof window !== undefined;
 
   useEffect(() => {
-    if (isBrowser()) {
-      let data = localStorage.getItem("cart") as string;
-      setQuantity(JSON.parse(data).length);
+    if (cartArray.length !== 0) {
+      setQuantity(cartArray.length);
     }
-  }, []);
+  }, [cartArray]);
 
   return (
     <div className="rounded-full ml-5 relative w-11 h-11 flex items-center justify-center">

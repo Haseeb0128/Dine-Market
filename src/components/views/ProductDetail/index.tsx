@@ -18,11 +18,32 @@ function urlFor(source: any) {
 }
 
 const ProductDetail: FC<{ item: oneProductType }> = ({ item }) => {
-  let { dispatch } = useContext(cartContext);
+  let { dispatch, userData, cartArray } = useContext(cartContext);
   const [imageForPreview, setImageForPreview] = useState<String>(
     item.image[0]._key
   );
   const [quantity, setQuantity] = useState<number>(1);
+
+  function handleAddToCart() {
+    let isExists = cartArray.some((elem: any) => elem.product_id === item._id);
+    if (userData) {
+      let dataToAddInCart = {
+        product_id: item._id,
+        quantity: quantity,
+        user_id: userData.uuid,
+        price: item.price,
+      };
+      if (!isExists) {
+        dispatch("addToCart", dataToAddInCart);
+        // dispatch({ payload: "addToCart", data: dataToAddInCart });
+      } else {
+        dispatch("updateCart", dataToAddInCart);
+      }
+      notification(item.productname);
+    } else {
+      notificationError("Please Login First");
+    }
+  }
 
   function incrementQuantity() {
     setQuantity(quantity + 1);
@@ -32,17 +53,11 @@ const ProductDetail: FC<{ item: oneProductType }> = ({ item }) => {
       setQuantity(quantity - 1);
     }
   }
-  function handleAddToCart() {
-    let dataToAddInCart = {
-      productID: item._id,
-      quantity: quantity,
-    };
-    dispatch({ payload: "addToCart", data: dataToAddInCart });
-    notification(item.productname);
-  }
 
   const notification = (title: string) =>
     toast(`${quantity} ${title} added to cart!`);
+
+  const notificationError = (title: string) => toast(`${title}`);
 
   return (
     <div className="px-4 py-2 min-h-screen mt-10 mb-10">

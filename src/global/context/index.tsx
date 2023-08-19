@@ -19,6 +19,7 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth";
+import BASE_PATH_FOR_API from "@/components/shared/BasePath";
 
 export const cartContext = createContext<any>(null);
 
@@ -30,29 +31,51 @@ const ContextWrapper = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const [userData, setUserData] = useState<any>();
   const [loading, setLoading] = useState(false);
-  const [ErrorViaUserCredential, setErrorViaUserCredential] = useState<
+  const [errorViaUserCredential, setErrorViaUserCredential] = useState<
     indexForError | ""
   >("");
-  const initializerOfCart = {
-    cart: [
-      // {
-      //   productID: "",
-      //   quantity: 2,
-      // },
-    ],
-  };
-  const [state, dispatch] = useReducer(cartReducer, initializerOfCart);
-  useEffect(() => {
-    let cart = localStorage.getItem("cart") as string;
-    if (cart === null) {
-      localStorage.setItem("cart", JSON.stringify(state.cart));
-    } else {
-      initializerOfCart.cart = JSON.parse(cart);
-    }
+  const [cartArray, setCartArray] = useState<any>([]);
+  const [errorsOfFirebase, setErrorsOfFirebase] = useState({
+    key: "",
+    errorMessage: "",
   });
+
+  async function fethApiForAllCartItems() {
+    let res = await fetch(`${BASE_PATH_FOR_API}/api/cartfunc`);
+    if (!res.ok) {
+      throw new Error("Failed to fetch");
+    }
+    let dataToReturn = await res.json();
+    setCartArray(dataToReturn.allCartData);
+  }
+
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(state.cart));
-  }, [state.cart]);
+    fethApiForAllCartItems();
+  }, []);
+
+  async function dispatch(payload: string, data: any) {
+    if (payload === "addToCart") {
+      await fetch(`${BASE_PATH_FOR_API}/api/cartfunc`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    } else if (payload === "removeFromCart") {
+      await fetch(
+        `${BASE_PATH_FOR_API}/api/cartfunc?product_id=${data.product_id}&user_id=${data.user_id}`,
+        {
+          method: "DELETE",
+        }
+      );
+    } else if (payload === "updateCart") {
+      setLoading(true);
+      await fetch(`${BASE_PATH_FOR_API}/api/cartfunc`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+      setLoading(false);
+    }
+    fethApiForAllCartItems();
+  }
 
   let user = auth.currentUser;
   useEffect(() => {
@@ -98,8 +121,14 @@ const ContextWrapper = ({ children }: { children: ReactNode }) => {
         router.push("/");
       })
       .catch((res: any) => {
-        setErrorViaUserCredential({
-          signUpError: "Error occured via Signup with Email and Password",
+        // setErrorViaUserCredential({
+        //   signUpError: "Error occured via Signup with Email and Password",
+        // });
+        let error = res.code.split("/");
+        error = error[error.length - 1];
+        setErrorsOfFirebase({
+          key: "signup",
+          errorMessage: error,
         });
         setLoading(false);
       });
@@ -107,14 +136,21 @@ const ContextWrapper = ({ children }: { children: ReactNode }) => {
   }
 
   function signInUser(email: string, password: string) {
+    setLoading(true);
     return signInWithEmailAndPassword(auth, email, password)
       .then((res: any) => {
         setLoading(false);
         // router.push("/");
       })
       .catch((res: any) => {
-        setErrorViaUserCredential({
-          signInError: "Error occured via Signin with Email and Password",
+        // setErrorViaUserCredential({
+        //   signInError: "Error occured via Signin with Email and Password",
+        // });
+        let error = res.code.split("/");
+        error = error[error.length - 1];
+        setErrorsOfFirebase({
+          key: "signin",
+          errorMessage: error,
         });
       });
     setLoading(false);
@@ -158,7 +194,8 @@ const ContextWrapper = ({ children }: { children: ReactNode }) => {
   return (
     <cartContext.Provider
       value={{
-        state,
+        cartArray,
+        errorsOfFirebase,
         dispatch,
         signUpUser,
         signUpViaGoogle,

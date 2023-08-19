@@ -1,9 +1,14 @@
 "use client";
 import { cartContext } from "@/global/context";
 import { useContext, useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { FcGoogle } from "react-icons/fc";
+
+const notificationError = (title: string) => toast(`${title}`);
 
 const SignInComp = () => {
-  let { signInUser, userData } = useContext(cartContext);
+  let { signInUser, userData, errorsOfFirebase, signUpViaGoogle } =
+    useContext(cartContext);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
 
@@ -11,7 +16,10 @@ const SignInComp = () => {
     if (userData) {
       window.location.href = "/";
     }
-  }, [userData]);
+    if (errorsOfFirebase.errorMessage.length !== 0) {
+      notificationError(errorsOfFirebase.errorMessage);
+    }
+  }, [userData, errorsOfFirebase]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,6 +33,7 @@ const SignInComp = () => {
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 pt-7 pb-7 sm:pt-0 sm:pb-0">
+      <Toaster />
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
         <a
           href="#"
@@ -91,6 +100,14 @@ const SignInComp = () => {
                 className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
                 Sign In
+              </button>
+              <button
+                type="button"
+                onClick={signUpViaGoogle}
+                className="flex gap-3 items-center justify-center w-full text-white bg-[#0F172A] focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              >
+                <FcGoogle size={25} />
+                <p>Sign In with Google</p>
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don't have an account?{" "}

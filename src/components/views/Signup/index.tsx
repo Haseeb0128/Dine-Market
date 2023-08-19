@@ -3,6 +3,9 @@
 import { cartContext } from "@/global/context";
 import { useContext, useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import toast, { Toaster } from "react-hot-toast";
+
+const notificationError = (title: string) => toast(`${title}`);
 
 type SignupFormData = {
   fullName: string;
@@ -13,6 +16,7 @@ type SignupFormData = {
 const SignupComp = () => {
   let {
     signUpUser,
+    errorsOfFirebase,
     signUpViaGoogle,
     loading,
     userData,
@@ -31,7 +35,10 @@ const SignupComp = () => {
     if (userData) {
       window.location.href = "/";
     }
-  }, [userData]);
+    if (errorsOfFirebase.errorMessage.length !== 0) {
+      notificationError(errorsOfFirebase.errorMessage);
+    }
+  }, [userData, errorsOfFirebase]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -75,6 +82,7 @@ const SignupComp = () => {
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 lg:pt-12 lg:pb-12 pt-7 pb-7 sm:pt-0 sm:pb-0">
+      <Toaster />
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
         <a
           href="#"
