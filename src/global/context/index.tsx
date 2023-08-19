@@ -19,7 +19,6 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth";
-import BASE_PATH_FOR_API from "@/components/shared/BasePath";
 
 export const cartContext = createContext<any>(null);
 
@@ -41,34 +40,38 @@ const ContextWrapper = ({ children }: { children: ReactNode }) => {
   });
 
   async function fethApiForAllCartItems() {
-    let res = await fetch(`${BASE_PATH_FOR_API}/api/cartfunc`);
+    let res = await fetch(`/api/cartfunc`);
     if (!res.ok) {
       throw new Error("Failed to fetch");
     }
     let dataToReturn = await res.json();
-    setCartArray(dataToReturn.allCartData);
+    await setCartArray((prev: any) => dataToReturn.allCartData);
+    router.refresh();
+    if (dataToReturn) {
+      return true;
+    }
   }
 
   useEffect(() => {
     fethApiForAllCartItems();
-  }, []);
+  }, [userData]);
 
   async function dispatch(payload: string, data: any) {
     if (payload === "addToCart") {
-      await fetch(`${BASE_PATH_FOR_API}/api/cartfunc`, {
+      await fetch(`/api/cartfunc`, {
         method: "POST",
         body: JSON.stringify(data),
       });
     } else if (payload === "removeFromCart") {
       await fetch(
-        `${BASE_PATH_FOR_API}/api/cartfunc?product_id=${data.product_id}&user_id=${data.user_id}`,
+        `/api/cartfunc?product_id=${data.product_id}&user_id=${data.user_id}`,
         {
           method: "DELETE",
         }
       );
     } else if (payload === "updateCart") {
       setLoading(true);
-      await fetch(`${BASE_PATH_FOR_API}/api/cartfunc`, {
+      await fetch(`/api/cartfunc`, {
         method: "PUT",
         body: JSON.stringify(data),
       });
@@ -204,6 +207,7 @@ const ContextWrapper = ({ children }: { children: ReactNode }) => {
         sendEmailVarificationCode,
         updateUsernamePhoto,
         loading,
+        setLoading,
         userData,
       }}
     >

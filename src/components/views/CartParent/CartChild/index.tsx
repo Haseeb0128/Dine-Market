@@ -20,8 +20,10 @@ const CartComp = ({
   allProductsOfStore: Array<oneProductType>;
 }) => {
   const [allProductsForCart, setAllProductsForCart] = useState<any>([]);
-  let { cartArray, dispatch, userData, loading } = useContext(cartContext);
+  let { cartArray, dispatch, userData, loading, setLoading } =
+    useContext(cartContext);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [loadings, setLoadings] = useState<boolean>(false);
 
   let router = useRouter();
 
@@ -53,7 +55,11 @@ const CartComp = ({
     if (cartArray.length !== 0) {
       let data = allProductsOfStore.filter((item: oneProductType) => {
         for (let index = 0; index < cartArray.length; index++) {
-          if (cartArray[index].product_id === item._id) {
+          let element: any = cartArray[index];
+          if (
+            element.product_id === item._id &&
+            element.user_id === userData.uuid
+          ) {
             return true;
           }
         }
@@ -97,6 +103,19 @@ const CartComp = ({
   }
 
   const notificationError = (title: string) => toast(`${title}`);
+
+  async function handleProcessCheckout() {
+    setLoadings(true);
+    let linkOrg: any = await fetch(`/api/checkout_sessions`, {
+      method: "POST",
+      body: JSON.stringify(allProductsForCart),
+    });
+    if (linkOrg) {
+      let { link } = await linkOrg.json();
+      window.location.href = link;
+    }
+    setLoadings(false);
+  }
 
   return (
     <div className="mt-12 mb-12 px-4 py-2 min-h-screen">
@@ -256,8 +275,11 @@ const CartComp = ({
               <p>Subtotal</p>
               <p>${totalPrice}</p>
             </div>
-            <button className="rounded-lg bg-[#0F172A] text-white p-2">
-              Procede to Checkout
+            <button
+              className="rounded-lg bg-[#0F172A] text-white p-2"
+              onClick={handleProcessCheckout}
+            >
+              {loadings ? "Loading..." : "Proceed to Checkout"}
             </button>
           </div>
         </div>
